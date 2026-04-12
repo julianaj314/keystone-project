@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<title>Cuidamed</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&family=Fraunces:wght@700;900&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="styles.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="phone">
+<div class="sbar lg" id="sbar">9:41<span>WiFi · 100%</span></div>
+
+<!-- ════════════ LOGIN ════════════ -->
+<div class="view active" id="view-lg">
+  <div class="login-wrap" style="background:var(--teal-d);">
+    <div style="text-align:center;padding:16px 0 24px;width:100%;">
+      <div class="logo">Cuidamed</div>
+      <div class="tagline">Tu salud, siempre acompañada</div>
+    </div>
+
+    <!-- PASO 1: Elegir rol -->
+    <div id="step-role" class="login-card">
+      <div class="lc-title">¿Quién eres?</div>
+      <div style="font-size:14px;color:var(--muted);font-weight:700;text-align:center;margin-top:-4px;margin-bottom:12px;">Elige cómo quieres ingresar</div>
+      <div class="role-row" style="gap:12px;">
+        <div class="rb sp" id="rb-pt" onclick="selRole('pt')" style="padding:22px 10px;">
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none" style="display:block;margin:0 auto 10px;"><circle cx="20" cy="13" r="7" fill="#1A6B6B" opacity=".85"/><path d="M6 36c0-7.732 6.268-14 14-14s14 6.268 14 14" stroke="#1A6B6B" stroke-width="2.5" stroke-linecap="round" fill="none" opacity=".85"/></svg>
+          <span class="rl" style="font-size:15px;">Soy paciente</span>
+        </div>
+        <div class="rb" id="rb-ca" onclick="selRole('ca')" style="padding:22px 10px;">
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none" style="display:block;margin:0 auto 10px;"><circle cx="20" cy="12" r="6" fill="#5B3FA6" opacity=".85"/><path d="M7 34c0-7.18 5.82-13 13-13s13 5.82 13 13" stroke="#5B3FA6" stroke-width="2.5" stroke-linecap="round" fill="none" opacity=".85"/><path d="M28 18v8M24 22h8" stroke="#5B3FA6" stroke-width="2.5" stroke-linecap="round" opacity=".85"/></svg>
+          <span class="rl" style="font-size:15px;">Soy cuidador</span>
+        </div>
+      </div>
+      <button class="btn-login btn-pt" id="btn-role" onclick="goStepCedula()">Continuar</button>
+    </div>
+
+    <!-- PASO 2: Ingresar cédula -->
+    <div id="step-cedula" class="login-card" style="display:none;">
+      <button onclick="backToRole()" style="background:none;border:none;color:var(--muted);font-size:13px;font-weight:800;cursor:pointer;margin-bottom:12px;padding:0;display:flex;align-items:center;gap:4px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>Volver
+      </button>
+      <div class="lc-title" id="cedula-title">Ingresa tu cédula</div>
+      <div style="font-size:14px;color:var(--muted);font-weight:700;text-align:center;margin:4px 0 14px;" id="cedula-sub">Sin puntos ni espacios</div>
+      <div>
+        <label class="lbl">Número de cédula</label>
+        <input class="inp" id="inp-cedula" type="number" placeholder="1234567890" style="font-size:20px;letter-spacing:2px;text-align:center;" oninput="onCedulaInput()"/>
+      </div>
+      <button class="btn-login btn-pt" id="btn-cedula" onclick="submitCedula()" disabled style="opacity:.5;">Buscar</button>
+    </div>
+
+    <!-- PASO 3: Confirmar identidad -->
+    <div id="step-confirm" class="login-card" style="display:none;">
+      <div class="lc-title" id="confirm-title">¿Eres tú?</div>
+      <div style="text-align:center;margin:16px 0;">
+        <div style="width:64px;height:64px;border-radius:50%;background:var(--teal-s);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--teal-d)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        </div>
+        <div style="font-size:22px;font-weight:900;color:var(--text);" id="confirm-name">María García</div>
+        <div style="font-size:14px;color:var(--muted);font-weight:700;margin-top:4px;" id="confirm-cedula">Cédula: 1234567890</div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn-login" onclick="backToStep('step-cedula')" style="flex:1;background:var(--bg);color:var(--muted);border:1.5px solid var(--border);">No soy yo</button>
+        <button class="btn-login btn-pt" id="btn-confirm-yes" onclick="confirmIdentity()" style="flex:2;">Sí, soy yo</button>
+      </div>
+    </div>
+
+    <!-- PASO 4: Registro nuevo paciente -->
+    <div id="step-register" class="login-card" style="display:none;">
+      <button onclick="backToStep('step-cedula')" style="background:none;border:none;color:var(--muted);font-size:13px;font-weight:800;cursor:pointer;margin-bottom:12px;padding:0;display:flex;align-items:center;gap:4px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>Volver
+      </button>
+      <div class="lc-title">Bienvenido/a</div>
+      <div style="font-size:14px;color:var(--muted);font-weight:700;text-align:center;margin-bottom:12px;">¿Cómo te llamas?</div>
+      <div>
+        <label class="lbl">Tu nombre completo</label>
+        <input class="inp" id="inp-name" type="text" placeholder="Ej: María García" style="font-size:18px;" oninput="onNameInput()"/>
+      </div>
+      <button class="btn-login btn-pt" id="btn-register" onclick="registerPatient()" disabled style="opacity:.5;">Crear mi perfil</button>
+    </div>
+
+  </div>
+</div>
+<!-- ════════════ PATIENT VIEW ════════════ -->
+<div class="view" id="view-pt">
+
+  <!-- HOME -->
+  <div class="scr active" id="ps-inicio">
+    <div class="hdr pt">
+      <div class="hdr-row">
+        <div><div class="hdr-lbl">Cuidamed</div><div class="hdr-name" id="p-greeting">Buenos días,<br>María</div></div>
+        <div class="hdr-pill" onclick="openCall('Carlos (hijo)')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.18 2 2 0 0 1 3.59 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.56a16 16 0 0 0 6.29 6.29l.87-.87a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg> Llamar familiar</div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;">
+      <div class="bmo-badge" id="p-bmo-badge"><span class="ldot"></span>BMO Conectado</div>
+      <button onclick="openAlertsPanel('patient')" style="background:rgba(255,255,255,0.13);border:1.5px solid rgba(255,255,255,0.22);border-radius:50px;padding:6px 12px;color:#fff;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:6px;position:relative;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        Avisos
+        <span id="p-notif-count" style="background:var(--red);color:#fff;border-radius:50%;width:16px;height:16px;font-size:9px;font-weight:900;display:none;align-items:center;justify-content:center;">2</span>
+      </button>
+    </div>
+    </div>
+    <div class="body">
+      <div class="hero">
+        <div class="hero-lbl"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Próxima dosis</div>
+        <div class="hero-name" id="p-hero-n">Metformina 500mg</div>
+        <div class="hero-meta" id="p-hero-m">8:00 pm · Compartimento 2 · 1 pastilla</div>
+        <div class="cd"><div class="cd-lbl">Faltan</div><div class="cd-time" id="p-cd">—</div></div>
+        <button class="btn-took" onclick="openConfirm()">
+          <span class="took-ico" style="font-size:16px;font-weight:900;color:#fff;">&#10003;</span>Ya tomé mi pastilla
+        </button>
+      </div>
+
+      <div class="sec" id="p-today-label">Cargando...</div>
+      <div id="p-today-doses"><div class="mrow">
+        <div class="sc sc-g" style="width:50px;height:50px;font-size:22px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="mrow-info"><div class="mrow-name">Losartán 50mg</div><div class="mrow-sub">12:00 m · Comp. 1</div></div>
+        <span class="bd bd-g mrow-bd">Tomada</span>
+      </div>
+      <div class="mrow">
+        <div class="sc sc-a" style="width:50px;height:50px;font-size:22px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><path d="M5 2h14M5 22h14M7 2v5l5 5-5 5v5M17 2v5l-5 5 5 5v5"/></svg></div>
+        <div class="mrow-info"><div class="mrow-name">Metformina 500mg</div><div class="mrow-sub">8:00 pm · Comp. 2</div></div>
+        <span class="bd bd-a mrow-bd">Pendiente</span>
+      </div>
+      <div class="mrow">
+        <div class="sc sc-r" style="width:50px;height:50px;font-size:22px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+        <div class="mrow-info"><div class="mrow-name">Naproxeno 50mg</div><div class="mrow-sub">6:30 am · Comp. 3</div></div>
+        <span class="bd bd-r mrow-bd">Olvidada</span>
+      </div>
+
+      </div>
+      <div class="adh">
+        <div class="adh-ttl">Tu semana</div>
+        <div class="adh-days" id="p-week"></div>
+        <div class="adh-row">
+          <div><div class="adh-pct" id="p-adh-pct">71%</div><div class="adh-sub">dosis tomadas</div></div>
+          <div class="adh-streak"><div class="adh-sn" id="p-streak">7</div><div class="adh-sub">días seguidos</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTORIAL PACIENTE -->
+  <div class="scr" id="ps-historial">
+    <div class="phdr pt"><div class="phdr-title">Mi historial</div><div class="phdr-sub">Registro de tus dosis</div></div>
+    <div class="body" id="p-hist-body">
+      <div class="hg-lbl"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> 10 de marzo</div>
+      <div class="hist-card">
+        <div class="hi"><div class="sc sc-g" style="width:38px;height:38px;font-size:18px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg></div><span class="hi-name">Losartán 50mg</span><span class="hi-time">12:03</span><span class="bd bd-g" style="font-size:12px;padding:6px 12px;">Tomada</span></div>
+        <div class="hi"><div class="sc sc-a" style="width:38px;height:38px;font-size:18px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><path d="M5 2h14M5 22h14M7 2v5l5 5-5 5v5M17 2v5l-5 5 5 5v5"/></svg></div><span class="hi-name">Metformina 500mg</span><span class="hi-time">—</span><span class="bd bd-a" style="font-size:12px;padding:6px 12px;">Pendiente</span></div>
+        <div class="hi"><div class="sc sc-r" style="width:38px;height:38px;font-size:18px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><span class="hi-name">Naproxeno 50mg</span><span class="hi-time">—</span><span class="bd bd-r" style="font-size:12px;padding:6px 12px;">Olvidada</span></div>
+      </div>
+
+      <div class="hg-lbl"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> 9 de marzo</div>
+      <div class="hist-card">
+        <div class="hi"><div class="sc sc-g" style="width:38px;height:38px;font-size:18px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg></div><span class="hi-name">Losartán 50mg</span><span class="hi-time">12:01</span><span class="bd bd-g" style="font-size:12px;padding:6px 12px;">Tomada</span></div>
+        <div class="hi"><div class="sc sc-g" style="width:38px;height:38px;font-size:18px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg></div><span class="hi-name">Metformina 500mg</span><span class="hi-time">8:05 pm</span><span class="bd bd-g" style="font-size:12px;padding:6px 12px;">Tomada</span></div>
+        <div class="hi"><div class="sc sc-g" style="width:38px;height:38px;font-size:18px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg></div><span class="hi-name">Naproxeno 50mg</span><span class="hi-time">6:32 am</span><span class="bd bd-g" style="font-size:12px;padding:6px 12px;">Tomada</span></div>
+      </div>
+
+      <div class="hg-lbl"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> 8 de marzo</div>
+      <div class="hist-card">
+        <div class="hi"><div class="sc sc-g" style="width:38px;height:38px;font-size:18px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg></div><span class="hi-name">Losartán 50mg</span><span class="hi-time">12:00</span><span class="bd bd-g" style="font-size:12px;padding:6px 12px;">Tomada</span></div>
+        <div class="hi"><div class="sc sc-r" style="width:38px;height:38px;font-size:18px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><span class="hi-name">Metformina 500mg</span><span class="hi-time">—</span><span class="bd bd-r" style="font-size:12px;padding:6px 12px;">Olvidada</span></div>
+        <div class="hi"><div class="sc sc-g" style="width:38px;height:38px;font-size:18px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg></div><span class="hi-name">Naproxeno 50mg</span><span class="hi-time">6:35 am</span><span class="bd bd-g" style="font-size:12px;padding:6px 12px;">Tomada</span></div>
+      </div>
+
+      <div class="adh">
+        <div class="adh-ttl">Adherencia mensual</div>
+        <div class="adh-row">
+          <div><div class="adh-pct">71%</div><div class="adh-sub">marzo 2025</div></div>
+          <div class="adh-streak"><div class="adh-sn">7 días</div><div class="adh-sub">racha actual</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BMO PACIENTE -->
+  <div class="scr" id="ps-bmo">
+    <div class="phdr pt"><div class="phdr-title">Mi dispositivo BMO</div><div class="phdr-sub">Estado del dispensador</div></div>
+    <div class="body">
+      <div class="bmo-status-card" id="p-bmo-card">
+        <div class="bmo-hdr">
+          <div class="bmo-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><rect x="4" y="6" width="16" height="14" rx="2"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/><circle cx="9" cy="13" r="1" fill="currentColor"/><circle cx="15" cy="13" r="1" fill="currentColor"/><line x1="9" y1="17" x2="11" y2="17"/><line x1="13" y1="17" x2="15" y2="17"/></svg></div>
+          <div>
+            <div class="bmo-name">BMO – Dispensador</div>
+            <div class="bmo-conn on">Conectado · Sala de María</div>
+          </div>
+        </div>
+        <div class="bmo-stats">
+          <div class="bmo-stat"><div class="bmo-stat-n">92%</div><div class="bmo-stat-l">Batería</div></div>
+          <div class="bmo-stat"><div class="bmo-stat-n">12:03</div><div class="bmo-stat-l">Última dosis</div></div>
+          <div class="bmo-stat"><div class="bmo-stat-n"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg> OK</div><div class="bmo-stat-l">Sensores</div></div>
+        </div>
+      </div>
+
+      <div class="sec">Nivel de pastillas por compartimento</div>
+
+      <div class="comp-grid" id="p-bmo-comps">
+        <!-- Comp 1 - OK -->
+        <div class="comp">
+          <div class="comp-row">
+            <div><div class="comp-label">Compartimento 1</div><div class="comp-name">Losartán 50mg</div></div>
+            <div class="comp-pct ok">78%</div>
+          </div>
+          <div class="level-bar"><div class="level-fill lf-ok" style="width:78%"></div></div>
+        </div>
+
+        <!-- Comp 2 - OK -->
+        <div class="comp">
+          <div class="comp-row">
+            <div><div class="comp-label">Compartimento 2</div><div class="comp-name">Metformina 500mg</div></div>
+            <div class="comp-pct ok">55%</div>
+          </div>
+          <div class="level-bar"><div class="level-fill lf-ok" style="width:55%"></div></div>
+        </div>
+
+        <!-- Comp 3 - LOW -->
+        <div class="comp low-stock">
+          <div class="comp-row">
+            <div><div class="comp-label">Compartimento 3</div><div class="comp-name">Naproxeno 50mg</div></div>
+            <div class="comp-pct low">18%</div>
+          </div>
+          <div class="level-bar"><div class="level-fill lf-low" style="width:18%"></div></div>
+          <div class="comp-alert low"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Pocas pastillas — avísale a tu familiar</div>
+        </div>
+
+        <!-- Comp 4 - empty -->
+        <div class="comp empty">
+          <div class="comp-row">
+            <div><div class="comp-label">Compartimento 4</div><div class="comp-name">Sin medicamento</div></div>
+            <div class="comp-pct empty">Vacío</div>
+          </div>
+          <div class="level-bar"><div class="level-fill lf-empty" style="width:4%"></div></div>
+          <div class="comp-alert empty"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> Compartimento vacío</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NOTIFICACIONES PACIENTE -->
+  <div class="scr" id="ps-notifs">
+    <div class="phdr pt" style="display:flex;align-items:center;gap:12px;">
+      <button onclick="goPt('inicio')" style="background:rgba(255,255,255,0.15);border:none;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div><div class="phdr-title">Mis avisos</div><div class="phdr-sub">Recordatorios para ti</div></div>
+    </div>
+    <div class="body">
+      <div class="notif-wrap" id="p-notifs-body">
+        <div class="notif"><div class="notif-bar" style="background:var(--amber)"></div><div class="notif-inner"><div class="notif-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Hora de tu pastilla</div><div class="notif-msg">Metformina 500mg está lista en el Compartimento 2</div><div class="notif-time">Hoy, 8:00 pm</div></div></div>
+        <div class="notif"><div class="notif-bar" style="background:var(--red)"></div><div class="notif-inner"><div class="notif-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Pastilla olvidada</div><div class="notif-msg">No tomaste Naproxeno a las 6:30 am. Tu familiar fue notificado.</div><div class="notif-time">Hoy, 7:15 am</div></div></div>
+        <div class="notif"><div class="notif-bar" style="background:var(--green)"></div><div class="notif-inner"><div class="notif-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg> ¡Muy bien, María!</div><div class="notif-msg">Tomaste Losartán a tiempo. ¡7 días seguidos! Sigue así</div><div class="notif-time">Hoy, 12:03 pm</div></div></div>
+        <div class="notif"><div class="notif-bar" style="background:var(--amber)"></div><div class="notif-inner"><div class="notif-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> Pocas pastillas</div><div class="notif-msg">Naproxeno 50mg está casi agotado en el BMO. Avísale a tu cuidador.</div><div class="notif-time">Ayer, 9:00 am</div></div></div>
+        <div class="notif"><div class="notif-bar" style="background:var(--teal)"></div><div class="notif-inner"><div class="notif-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><path d="M10.5 20H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6.5"/><path d="M13.5 4H20a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6.5"/><line x1="12" y1="4" x2="12" y2="20"/></svg> Recordatorio mañana</div><div class="notif-msg">Naproxeno a las 6:30 am. El BMO lo tendrá listo para ti.</div><div class="notif-time">Ayer, 10:00 pm</div></div></div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- MEDICAMENTOS PACIENTE -->
+  <div class="scr" id="ps-medicamentos">
+    <div class="phdr pt"><div class="phdr-title">Mis medicamentos</div><div class="phdr-sub">Agrega o modifica tu tratamiento</div></div>
+    <div class="body" style="overflow-y:auto;">
+      <div class="form-card" style="background:var(--surface);border-radius:var(--rL);padding:20px;border:1.5px solid var(--border);">
+        <div style="font-size:15px;font-weight:900;color:var(--teal-d);margin-bottom:16px;">Nuevo medicamento</div>
+        <div class="field2"><label class="lbl">Nombre del medicamento</label><input class="inp" id="pm-nombre" type="text" placeholder="Ej: Losartán"/></div>
+        <div style="display:flex;gap:10px;">
+          <div class="field2" style="flex:1;"><label class="lbl">Dosis (mg)</label><input class="inp" id="pm-dosis" type="number" placeholder="50"/></div>
+          <div class="field2" style="flex:1;"><label class="lbl">Compartimento BMO</label>
+            <select class="inp" id="pm-comp"><option value="">Seleccionar</option><option value="1">Compartimento 1</option><option value="2">Compartimento 2</option><option value="3">Compartimento 3</option><option value="4">Compartimento 4</option></select>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <div class="field2" style="flex:1;"><label class="lbl">Hora</label><input class="inp" id="pm-hora" type="time"/></div>
+          <div class="field2" style="flex:1;"><label class="lbl">Frecuencia</label>
+            <select class="inp" id="pm-freq"><option value="daily">Todos los días</option><option value="twice_daily">Cada 12 horas</option><option value="three_times">Cada 8 horas</option><option value="weekly">Una vez por semana</option></select>
+          </div>
+        </div>
+        <div class="field2"><label class="lbl">Nota (opcional)</label><input class="inp" id="pm-nota" type="text" placeholder="Ej: Tomar con el desayuno"/></div>
+        <button class="btn-save" id="pm-save-btn" onclick="saveMedication('patient')">Guardar medicamento</button>
+      </div>
+      <div style="background:var(--surface);border-radius:var(--rL);border:1.5px solid var(--border);">
+        <div style="padding:13px 18px;font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border);">Mis medicamentos registrados</div>
+        <div id="pm-list"><div style="padding:24px;text-align:center;color:var(--muted);font-size:14px;font-weight:700;">Cargando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NAV PACIENTE -->
+  <nav class="nav">
+    <button class="nb ap" id="pnb-inicio" onclick="goPt('inicio')">
+      <div class="nbi">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>
+      </div><span class="nbl">Inicio</span>
+    </button>
+    <button class="nb" id="pnb-historial" onclick="goPt('historial')">
+      <div class="nbi">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="15" y2="11"/><line x1="9" y1="15" x2="12" y2="15"/></svg>
+      </div><span class="nbl">Historial</span>
+    </button>
+    <button class="nb" id="pnb-medicamentos" onclick="goPt('medicamentos')">
+      <div class="nbi">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 20H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6.5"/><path d="M13.5 4H20a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6.5"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+      </div><span class="nbl">Medicamentos</span>
+    </button>
+    <button class="nb" id="pnb-bmo" onclick="goPt('bmo')">
+      <div class="nbi">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="6" width="16" height="14" rx="2"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/><circle cx="9" cy="13" r="1.2" fill="currentColor"/><circle cx="15" cy="13" r="1.2" fill="currentColor"/><path d="M8 17h2m4 0h2"/></svg>
+      </div><span class="nbl">BMO</span>
+    </button>
+    <!-- Hidden nav btn for notifs (activado por el botón Avisos del header) -->
+    <button class="nb" id="pnb-notifs" style="display:none;" onclick="goPt('notifs')"><span class="nbl">Avisos</span></button>
+  </nav>
+  <div class="a11y">
+    <span class="a11y-lbl">Texto</span>
+    <button class="a11y-btn" style="font-size:13px;" onclick="sz('n')">A</button>
+    <button class="a11y-btn" style="font-size:17px;" onclick="sz('l')">A</button>
+    <div style="flex:1"></div>
+    <button class="logout-btn" onclick="logout()">Salir</button>
+  </div>
+</div>
+
+<!-- ════════════ CAREGIVER VIEW ════════════ -->
+<div class="view" id="view-ca">
+
+  <!-- DASHBOARD -->
+  <div class="scr active" id="cs-dash">
+    <div class="hdr ca">
+      <div class="hdr-row">
+        <div><div class="hdr-lbl">Vista cuidador</div><div class="hdr-name" id="c-greeting">Hola, Carlos</div></div>
+        <div class="hdr-pill" onclick="openCall('María (mamá)')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.18 2 2 0 0 1 3.59 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.56a16 16 0 0 0 6.29 6.29l.87-.87a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg> Llamar a María</div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;">
+      <div class="bmo-badge"><span class="ldot"></span>BMO de María · En línea</div>
+      <button onclick="openAlertsPanel('caregiver')" style="background:rgba(255,255,255,0.13);border:1.5px solid rgba(255,255,255,0.22);border-radius:50px;padding:6px 12px;color:#fff;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:6px;position:relative;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        Alertas
+        <span id="c-notif-count" style="background:var(--red);color:#fff;border-radius:50%;width:16px;height:16px;font-size:9px;font-weight:900;display:flex;align-items:center;justify-content:center;">3</span>
+      </button>
+    </div>
+    </div>
+    <div class="body">
+
+      <div class="pat-overview">
+        <div class="pat-hdr">
+          <div class="pat-av"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div>
+          <div><div class="pat-name" id="c-pat-name">María García</div><div class="pat-sub">Paciente · 72 años</div></div>
+          <div style="margin-left:auto;"><span class="bd bd-r" style="font-size:12px;padding:7px 13px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> 1 olvidada</span></div>
+        </div>
+        <div class="pat-stats">
+          <div class="pat-stat"><div class="ps-n" id="c-stat-taken" style="color:var(--green);">1</div><div class="ps-l">Tomadas</div></div>
+          <div class="pat-stat"><div class="ps-n" id="c-stat-pending" style="color:var(--amber);">1</div><div class="ps-l">Pendientes</div></div>
+          <div class="pat-stat"><div class="ps-n" id="c-stat-missed" style="color:var(--red);">1</div><div class="ps-l">Olvidadas</div></div>
+          <div class="pat-stat"><div class="ps-n" id="c-stat-pct" style="color:var(--care);">71%</div><div class="ps-l">Semana</div></div>
+        </div>
+      </div>
+
+      <div class="sec">Acciones rápidas</div>
+      <div class="care-acts">
+        <button class="ca-btn ca-call" onclick="openCall('María (mamá)')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.18 2 2 0 0 1 3.59 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.56a16 16 0 0 0 6.29 6.29l.87-.87a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg> Llamar</button>
+        <button class="ca-btn ca-mark" onclick="careQuickAction('mark')" ><span class="ca-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg></span>Marcar dosis</button>
+        <button class="ca-btn ca-alert" onclick="careQuickAction('alert')" ><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg> Enviar alerta</button>
+      </div>
+
+      <div class="sec">Medicamentos de hoy</div>
+      <div id="c-today-doses"><div class="cmrow">
+        <div class="sc sc-g" style="width:42px;height:42px;font-size:18px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="cmr-info"><div class="cmr-name">Losartán 50mg</div><div class="cmr-sub">Tomada a las 12:03 m</div></div>
+        <span class="bd bd-g" style="font-size:12px;padding:7px 13px;">Tomada</span>
+      </div>
+      <div class="cmrow">
+        <div class="sc sc-a" style="width:42px;height:42px;font-size:18px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><path d="M5 2h14M5 22h14M7 2v5l5 5-5 5v5M17 2v5l-5 5 5 5v5"/></svg></div>
+        <div class="cmr-info"><div class="cmr-name">Metformina 500mg</div><div class="cmr-sub">Pendiente · 8:00 pm</div></div>
+        <button class="mini-btn" onclick="careMarkTook(this)">Marcar tomada</button>
+      </div>
+      <div class="cmrow">
+        <div class="sc sc-r" style="width:42px;height:42px;font-size:18px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+        <div class="cmr-info"><div class="cmr-name">Naproxeno 50mg</div><div class="cmr-sub">Olvidada · 6:30 am</div></div>
+        <button class="mini-btn" onclick="careMarkTook(this)">Marcar tomada</button>
+      </div>
+
+      </div>
+      <div class="adh">
+        <div class="adh-ttl">Adherencia semanal</div>
+        <div class="adh-days" id="c-week"></div>
+        <div class="adh-row">
+          <div><div class="adh-pct" id="c-adh-pct" style="color:var(--care);">71%</div><div class="adh-sub">dosis tomadas</div></div>
+          <div class="adh-streak"><div class="adh-sn" id="c-streak">7</div><div class="adh-sub">días seguidos</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTORIAL CUIDADOR -->
+  <div class="scr" id="cs-historial">
+    <div class="phdr ca">
+      <div class="phdr-title">Historial de <span id="c-hist-name">María</span></div>
+      <div class="phdr-sub">Adherencia y registro de dosis</div>
+    </div>
+    <div class="body">
+
+      <!-- Selector de período -->
+      <div style="display:flex;gap:8px;">
+        <button class="period-btn active" id="pbtn-7"  onclick="setCareHistPeriod(7)">7 días</button>
+        <button class="period-btn"        id="pbtn-14" onclick="setCareHistPeriod(14)">14 días</button>
+        <button class="period-btn"        id="pbtn-30" onclick="setCareHistPeriod(30)">30 días</button>
+      </div>
+
+      <!-- Resumen adherencia (renderizado dinámicamente) -->
+      <div id="c-adh-summary" style="background:var(--surface);border-radius:var(--rL);border:1.5px solid var(--border);padding:20px;"></div>
+
+      <!-- Gráfico de barras semanal -->
+      <div style="background:var(--surface);border-radius:var(--rL);border:1.5px solid var(--border);padding:18px;">
+        <div style="font-size:13px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px;">Adherencia por día</div>
+        <canvas id="c-chart-bar" height="160"></canvas>
+      </div>
+
+      <!-- Gráfico por medicamento -->
+      <div style="background:var(--surface);border-radius:var(--rL);border:1.5px solid var(--border);padding:18px;">
+        <div style="font-size:13px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px;">Por medicamento</div>
+        <div id="c-med-breakdown"></div>
+      </div>
+
+      <!-- Historial detallado -->
+      <div style="background:var(--surface);border-radius:var(--rL);border:1.5px solid var(--border);overflow:hidden;">
+        <div style="padding:13px 18px;font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border);">Registro detallado</div>
+        <div id="c-hist-body" style="padding:4px 0;"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- BMO CUIDADOR -->
+  <div class="scr" id="cs-bmo">
+    <div class="phdr ca"><div class="phdr-title">Estado del BMO</div><div class="phdr-sub">Dispositivo de María</div></div>
+    <div class="body">
+      <div class="bmo-status-card" id="c-bmo-card">
+        <div class="bmo-hdr">
+          <div class="bmo-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><rect x="4" y="6" width="16" height="14" rx="2"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/><circle cx="9" cy="13" r="1" fill="currentColor"/><circle cx="15" cy="13" r="1" fill="currentColor"/><line x1="9" y1="17" x2="11" y2="17"/><line x1="13" y1="17" x2="15" y2="17"/></svg></div>
+          <div><div class="bmo-name">BMO – Dispensador</div><div class="bmo-conn on">Conectado · Sala de María</div></div>
+        </div>
+        <div class="bmo-stats">
+          <div class="bmo-stat"><div class="bmo-stat-n">92%</div><div class="bmo-stat-l">Batería</div></div>
+          <div class="bmo-stat"><div class="bmo-stat-n">12:03</div><div class="bmo-stat-l">Última dosis</div></div>
+          <div class="bmo-stat"><div class="bmo-stat-n"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg> OK</div><div class="bmo-stat-l">Sensores</div></div>
+        </div>
+      </div>
+
+      <div class="sec">Stock por compartimento</div>
+
+      <div class="comp-grid" id="c-bmo-comps">
+        <div class="comp">
+          <div class="comp-row"><div><div class="comp-label">Compartimento 1</div><div class="comp-name">Losartán 50mg</div></div><div class="comp-pct ok">78%</div></div>
+          <div class="level-bar"><div class="level-fill lf-ok" style="width:78%"></div></div>
+        </div>
+        <div class="comp">
+          <div class="comp-row"><div><div class="comp-label">Compartimento 2</div><div class="comp-name">Metformina 500mg</div></div><div class="comp-pct ok">55%</div></div>
+          <div class="level-bar"><div class="level-fill lf-ok" style="width:55%"></div></div>
+        </div>
+        <div class="comp low-stock">
+          <div class="comp-row"><div><div class="comp-label">Compartimento 3</div><div class="comp-name">Naproxeno 50mg</div></div><div class="comp-pct low">18%</div></div>
+          <div class="level-bar"><div class="level-fill lf-low" style="width:18%"></div></div>
+          <div class="comp-alert low"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Stock bajo — necesita reabastecimiento</div>
+          <button class="restock-btn" onclick="toast('<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> Alerta de reabastecimiento enviada')">Solicitar reabastecimiento</button>
+        </div>
+        <div class="comp empty">
+          <div class="comp-row"><div><div class="comp-label">Compartimento 4</div><div class="comp-name">Sin medicamento</div></div><div class="comp-pct empty">Vacío</div></div>
+          <div class="level-bar"><div class="level-fill lf-empty" style="width:4%"></div></div>
+          <div class="comp-alert empty"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> Compartimento vacío — requiere carga</div>
+          <button class="restock-btn" onclick="toast('<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> Recordatorio de carga enviado')">Marcar para recargar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ALERTAS CUIDADOR -->
+  <div class="scr" id="cs-alertas">
+    <div class="phdr ca"><div class="phdr-title">Alertas</div><div class="phdr-sub">Notificaciones sobre María</div></div>
+    <div class="body">
+      <div class="notif-wrap" id="c-alerts-body">
+        <div class="notif"><div class="notif-bar" style="background:var(--red)"></div><div class="notif-inner"><div class="notif-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> María no tomó su pastilla</div><div class="notif-msg">Naproxeno 50mg debía tomarse a las 6:30 am. Han pasado 45 min sin registro en el BMO.</div><div class="notif-time">Hoy, 7:15 am</div></div></div>
+        <div class="notif"><div class="notif-bar" style="background:var(--amber)"></div><div class="notif-inner"><div class="notif-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> Stock bajo: Naproxeno</div><div class="notif-msg">BMO detectó que Naproxeno 50mg está al 18%. Recarga pronto el Compartimento 3.</div><div class="notif-time">Hoy, 8:00 am</div></div></div>
+        <div class="notif"><div class="notif-bar" style="background:var(--amber)"></div><div class="notif-inner"><div class="notif-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Dosis pendiente en 30 min</div><div class="notif-msg">Metformina 500mg de María aún no ha sido tomada. La dosis es a las 8:00 pm.</div><div class="notif-time">Hoy, 7:30 pm</div></div></div>
+        <div class="notif"><div class="notif-bar" style="background:var(--green)"></div><div class="notif-inner"><div class="notif-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg> Losartán tomado a tiempo</div><div class="notif-msg">BMO confirmó que María tomó Losartán 50mg a las 12:03 pm.</div><div class="notif-time">Hoy, 12:04 pm</div></div></div>
+        <div class="notif"><div class="notif-bar" style="background:var(--care)"></div><div class="notif-inner"><div class="notif-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Resumen semanal</div><div class="notif-msg">María tomó el 71% de sus dosis esta semana. Lleva 7 días seguidos. Racha activa</div><div class="notif-time">Dom, 8:00 pm</div></div></div>
+        <div class="notif"><div class="notif-bar" style="background:var(--red)"></div><div class="notif-inner"><div class="notif-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> Compartimento 4 vacío</div><div class="notif-msg">BMO detectó el Compartimento 4 sin pastillas. Cárgalo antes de asignar un medicamento.</div><div class="notif-time">Ayer, 6:00 pm</div></div></div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- MEDICAMENTOS CUIDADOR -->
+  <div class="scr" id="cs-medicamentos">
+    <div class="phdr ca"><div class="phdr-title">Medicamentos</div><div class="phdr-sub">Gestiona el tratamiento del paciente</div></div>
+    <div class="body" style="overflow-y:auto;">
+      <div class="form-card" style="background:var(--surface);border-radius:var(--rL);padding:20px;border:1.5px solid var(--border);">
+        <div style="font-size:15px;font-weight:900;color:var(--care-d);margin-bottom:16px;">Nuevo medicamento</div>
+        <div class="field2"><label class="lbl">Nombre del medicamento</label><input class="inp" id="cm-nombre" type="text" placeholder="Ej: Losartán"/></div>
+        <div style="display:flex;gap:10px;">
+          <div class="field2" style="flex:1;"><label class="lbl">Dosis (mg)</label><input class="inp" id="cm-dosis" type="number" placeholder="50"/></div>
+          <div class="field2" style="flex:1;"><label class="lbl">Compartimento BMO</label>
+            <select class="inp" id="cm-comp"><option value="">Seleccionar</option><option value="1">Compartimento 1</option><option value="2">Compartimento 2</option><option value="3">Compartimento 3</option><option value="4">Compartimento 4</option></select>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <div class="field2" style="flex:1;"><label class="lbl">Hora</label><input class="inp" id="cm-hora" type="time"/></div>
+          <div class="field2" style="flex:1;"><label class="lbl">Frecuencia</label>
+            <select class="inp" id="cm-freq"><option value="daily">Todos los días</option><option value="twice_daily">Cada 12 horas</option><option value="three_times">Cada 8 horas</option><option value="weekly">Una vez por semana</option></select>
+          </div>
+        </div>
+        <div class="field2"><label class="lbl">Nota (opcional)</label><input class="inp" id="cm-nota" type="text" placeholder="Ej: Tomar con el desayuno"/></div>
+        <button class="btn-save care" id="cm-save-btn" onclick="saveMedication('caregiver')" style="background:var(--care-d);">Guardar medicamento</button>
+      </div>
+      <div style="background:var(--surface);border-radius:var(--rL);border:1.5px solid var(--border);">
+        <div style="padding:13px 18px;font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border);">Medicamentos registrados</div>
+        <div id="cm-list"><div style="padding:24px;text-align:center;color:var(--muted);font-size:14px;font-weight:700;">Cargando...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NAV CUIDADOR -->
+  <nav class="nav">
+    <button class="nb ac" id="cnb-dash" onclick="goCa('dash')">
+      <div class="nbi">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M6 20v-1a6 6 0 0 1 12 0v1"/><path d="M19 11a3 3 0 0 1 0 6"/><path d="M5 11a3 3 0 0 0 0 6"/></svg>
+      </div><span class="nbl" style="color:var(--care-d)">Paciente</span>
+    </button>
+    <button class="nb" id="cnb-historial" onclick="goCa('historial')">
+      <div class="nbi">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      </div><span class="nbl">Historial</span>
+    </button>
+    <button class="nb" id="cnb-medicamentos" onclick="goCa('medicamentos')">
+      <div class="nbi">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 20H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6.5"/><path d="M13.5 4H20a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6.5"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+      </div><span class="nbl">Medicamentos</span>
+    </button>
+    <button class="nb" id="cnb-bmo" onclick="goCa('bmo')">
+      <div class="nbi" style="position:relative;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="6" width="16" height="14" rx="2"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/><circle cx="9" cy="13" r="1.2" fill="currentColor"/><circle cx="15" cy="13" r="1.2" fill="currentColor"/><path d="M8 17h2m4 0h2"/></svg>
+        <span class="nbadge" id="bmo-badge-nav" style="display:none;">!</span>
+      </div><span class="nbl">BMO</span>
+    </button>
+    <!-- Hidden nav btn for alertas (activado por el botón Alertas del header) -->
+    <button class="nb" id="cnb-alertas" style="display:none;" onclick="goCa('alertas')"><span class="nbl">Alertas</span></button>
+  </nav>
+  <div class="a11y">
+    <span class="a11y-lbl" style="color:var(--care);">Modo cuidador</span>
+    <div style="flex:1"></div>
+    <button class="logout-btn" onclick="logout()">Salir</button>
+  </div>
+</div>
+
+<!-- CONFIRM OVERLAY -->
+<div class="ov" id="ov-confirm">
+  <div class="ov-box">
+    <div class="ov-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><path d="M10.5 20H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6.5"/><path d="M13.5 4H20a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6.5"/><line x1="12" y1="4" x2="12" y2="20"/></svg></div>
+    <div class="ov-title">¿Ya tomaste tu pastilla?</div>
+    <div class="ov-sub">Metformina 500mg · 1 pastilla</div>
+    <div class="ov-btns">
+      <button class="ov-yes" onclick="confirmYes()">Sí, ya la tomé</button>
+      <button class="ov-no" onclick="closeOv('ov-confirm')">No</button>
+    </div>
+  </div>
+</div>
+
+<!-- ALERTAS PANEL (drawer) -->
+<div id="alerts-panel" style="position:absolute;inset:0;background:rgba(15,69,69,0.7);display:none;align-items:flex-end;z-index:170;" onclick="closeAlertsPanel(event)">
+  <div style="background:var(--bg);border-radius:var(--rXL) var(--rXL) 0 0;width:100%;max-height:75%;display:flex;flex-direction:column;animation:slideUp2 .3s ease;">
+    <div style="padding:16px 20px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);flex-shrink:0;">
+      <span style="font-family:'Fraunces',serif;font-size:20px;font-weight:900;color:var(--text);" id="alerts-panel-title">Notificaciones</span>
+      <button onclick="closeAlertsPanel()" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:13px;font-weight:800;padding:4px 8px;">Cerrar</button>
+    </div>
+    <div style="overflow-y:auto;padding:12px 16px 20px;" id="alerts-panel-body">
+      <div style="padding:24px;text-align:center;color:var(--muted);font-size:14px;font-weight:700;">Cargando...</div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast-el"></div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
