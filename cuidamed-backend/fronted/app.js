@@ -263,14 +263,33 @@ function logout() {
 function switchView(v) {
   document.querySelectorAll('.view').forEach(x => x.classList.remove('active'));
   document.getElementById('view-' + v).classList.add('active');
-  document.getElementById('sbar').className = 'sbar ' + (v === 'pt' ? 'pt' : v === 'ca' ? 'ca' : 'lg');
+  const sbar = document.getElementById('sbar');
+  if (v === 'pt') {
+    sbar.style.background = 'var(--pt-card)';
+    sbar.style.color = 'var(--pt-muted)';
+    sbar.style.borderBottom = '1px solid var(--pt-border)';
+  } else if (v === 'ca') {
+    sbar.style.background = 'var(--ca-bg)';
+    sbar.style.color = 'var(--ca-muted)';
+    sbar.style.borderBottom = '1px solid var(--ca-border)';
+  } else {
+    sbar.style.background = 'var(--login-bg)';
+    sbar.style.color = 'rgba(255,255,255,0.6)';
+    sbar.style.borderBottom = 'none';
+  }
 }
 
 function goPt(id) {
   document.querySelectorAll('#view-pt .scr').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('#view-pt .nb').forEach(b => { b.classList.remove('ap'); b.querySelector('.nbl').style.color = ''; });
-  document.getElementById('ps-' + id).classList.add('active');
-  document.getElementById('pnb-' + id).classList.add('ap');
+  // Remove active from all nav buttons safely
+  document.querySelectorAll('#pt-nav .nb').forEach(b => b.classList.remove('ap'));
+  // Show screen
+  const scr = document.getElementById('ps-' + id);
+  if (scr) scr.classList.add('active');
+  // Activate nav button
+  const nb = document.getElementById('pnb-' + id);
+  if (nb) nb.classList.add('ap');
+  // Load data
   if (id === 'historial')    loadPatientHistory();
   if (id === 'bmo')          loadPatientBmo();
   if (id === 'notifs')       loadPanelNotifications('p-notifs-body', 'p-notif-count');
@@ -279,15 +298,20 @@ function goPt(id) {
 
 function goCa(id) {
   document.querySelectorAll('#view-ca .scr').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('#view-ca .nb').forEach(b => { b.classList.remove('ac'); b.querySelector('.nbl').style.color = ''; });
-  document.getElementById('cs-' + id).classList.add('active');
+  // Remove active from all nav buttons safely
+  document.querySelectorAll('#ca-nav .nb').forEach(b => b.classList.remove('ac'));
+  // Show screen
+  const scr = document.getElementById('cs-' + id);
+  if (scr) scr.classList.add('active');
+  // Activate nav button
   const nb = document.getElementById('cnb-' + id);
-  nb.classList.add('ac');
-  nb.querySelector('.nbl').style.color = 'var(--care-d)';
+  if (nb) nb.classList.add('ac');
+  // Load data
   if (id === 'historial')    loadCareHistory();
   if (id === 'bmo')          loadCareBmo();
   if (id === 'alertas')      loadPanelNotifications('c-alerts-body', 'c-notif-count');
   if (id === 'medicamentos') loadMedications('caregiver');
+  if (id === 'dash')         loadCareDash();
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -444,8 +468,7 @@ async function loadPatientNotifs() {
 async function loadCareDash() {
   // Mostrar nombre del paciente que se está cuidando
   const greet = document.getElementById('c-greeting');
-  if (greet && S.user) greet.innerHTML = `Cuidando a<br>${S.user.name.split(' ')[0]}`;
-  setTxt('c-pat-name', S.user?.name || '—');
+  if (greet && S.user) greet.textContent = S.user.name;
 
   setHtml('c-today-doses', loadingSpinner());
 
@@ -477,6 +500,15 @@ async function loadCareDash() {
 
     renderCareTodayDoses(doses);
     renderAdherence('c-adh-pct', 'c-streak', 'c-week', adh);
+    // Update ring fill
+    const pct = parseFloat(adh.adherence_pct || 0);
+    const ring = document.getElementById('c-adh-ring-fill');
+    if (ring) {
+      const circ = Math.round(pct * 88 / 100);
+      ring.setAttribute('stroke-dasharray', circ + ' ' + (88 - circ));
+    }
+    // Update header pct
+    setTxt('c-adh-pct', Math.round(pct) + '%');
 
   } catch (err) {
     setHtml('c-today-doses', errorCard('Error: ' + err.message));
@@ -484,24 +516,48 @@ async function loadCareDash() {
 }
 
 function renderCareTodayDoses(doses) {
-  if (!doses.length) {
-    setHtml('c-today-doses', emptyState('No hay medicamentos para hoy'));
+  const el = document.getElementById('c-today-doses');
+  if (!el) return;
+
+  // Set today's date label
+  const dateEl = document.getElementById('c-today-date');
+  if (dateEl) {
+    const today = new Date();
+    dateEl.textContent = today.toLocaleDateString('es-CO', { day:'numeric', month:'short' });
+  }
+
+  if (!doses || !doses.length) {
+    el.innerHTML = '<div style="padding:20px;text-align:center;color:rgba(255,255,255,0.3);font-size:13px;font-weight:700;">Sin dosis registradas hoy</div>';
     return;
   }
-  setHtml('c-today-doses', doses.map(d => `
-    <div class="cmrow" data-dose-id="${d.id}">
-      <div class="sc ${scClass(d.status)}" style="width:42px;height:42px;font-size:18px;">${scIcon(d.status)}</div>
-      <div class="cmr-info">
-        <div class="cmr-name">${d.medication_name}${d.dose_mg ? ' ' + d.dose_mg + 'mg' : ''}</div>
-        <div class="cmr-sub">${d.status === 'taken'
-          ? `Tomada a las ${fmtTime(d.taken_at)}`
-          : fmtTime(d.scheduled_at) + ' · ' + statusLabel(d.status)}</div>
-      </div>
-      ${d.status !== 'taken'
-        ? `<button class="mini-btn" onclick="careMarkTook(this)">Marcar tomada</button>`
-        : `<span class="bd bd-g" style="font-size:12px;padding:7px 13px;">Tomada</span>`}
-    </div>`).join(''));
+
+  el.innerHTML = doses.map(d => {
+    const isTaken  = d.status === 'taken';
+    const isMissed = d.status === 'missed';
+    const name     = `${d.medication_name}${d.dose_mg ? ' ' + parseFloat(d.dose_mg) + 'mg' : ''}`;
+    const timeStr  = d.taken_at
+      ? 'Tomada a las ' + fmtTime(d.taken_at) + (d.marked_by === 'bmo' ? ' · BMO' : '')
+      : (isMissed ? 'Olvidada · ' : 'Pendiente · ') + fmtScheduledTime(d.scheduled_time);
+
+    const badge = isTaken
+      ? '<span class="bd bd-g" style="font-size:11px;flex-shrink:0;">Tomada</span>'
+      : isMissed
+        ? '<span class="bd bd-r" style="font-size:11px;flex-shrink:0;">Olvidada</span>'
+        : `<button class="ca-dose-btn" onclick="careMarkDose('${d.id}', this)">Marcar</button>`;
+
+    return `
+      <div class="ca-dose-row">
+        <div class="sc ${scClass(d.status)}" style="width:40px;height:40px;font-size:16px;flex-shrink:0;">${scIcon(d.status)}</div>
+        <div class="cmr-info">
+          <div class="cmr-name">${name}</div>
+          <div class="cmr-sub">${timeStr}</div>
+        </div>
+        ${badge}
+      </div>`;
+  }).join('');
 }
+
+
 
 // ════════════════════════════════════════════════════════════════
 //  CUIDADOR — HISTORIAL
@@ -583,7 +639,7 @@ async function loadCareHistory() {
           labels,
           datasets: [
             { label:'Tomadas',    data:takenD,   backgroundColor:'#2edb96', borderRadius:6, borderSkipped:false },
-            { label:'Olvidadas',  data:missedD,  backgroundColor:'#fb3e3e', borderRadius:3, borderSkipped:false },
+            { label:'Olvidadas',  data:missedD,  backgroundColor:'#fb3e3e', borderRadius:6, borderSkipped:false },
             { label:'Pendientes', data:pendingD, backgroundColor:'#d312e9', borderRadius:6, borderSkipped:false }
           ]
         },
@@ -594,7 +650,7 @@ async function loadCareHistory() {
             legend:{
               position:'bottom',
               labels:{
-                font:{ family:'Nunito', weight:'700', size:11 },
+                font:{ family:'Plus Jakarta Sans', weight:'700', size:11 },
                 padding:16,
                 usePointStyle:true,
                 pointStyle:'circle'
@@ -602,8 +658,8 @@ async function loadCareHistory() {
             },
             tooltip:{
               backgroundColor:'var(--text)',
-              titleFont:{ family:'Nunito', weight:'800', size:12 },
-              bodyFont:{ family:'Nunito', weight:'700', size:11 },
+              titleFont:{ family:'Plus Jakarta Sans', weight:'800', size:12 },
+              bodyFont:{ family:'Plus Jakarta Sans', weight:'700', size:11 },
               padding:10,
               cornerRadius:10
             }
@@ -613,14 +669,14 @@ async function loadCareHistory() {
               stacked:true,
               grid:{ display:false },
               border:{ display:false },
-              ticks:{ font:{ family:'Nunito', weight:'700', size:10 }, color:'#6B8888' }
+              ticks:{ font:{ family:'Plus Jakarta Sans', weight:'700', size:10 }, color:'#6B8888' }
             },
             y:{
               stacked:true,
               beginAtZero:true,
               grid:{ color:'rgba(0,0,0,0.04)', drawBorder:false },
               border:{ display:false },
-              ticks:{ stepSize:1, font:{ family:'Nunito', weight:'700', size:10 }, color:'#6B8888' }
+              ticks:{ stepSize:1, font:{ family:'Plus Jakarta Sans', weight:'700', size:10 }, color:'#6B8888' }
             }
           }
         }
@@ -806,6 +862,19 @@ async function confirmYes() {
     await loadPatientHome();
   } catch (err) {
     toast('Error al registrar: ' + err.message);
+  }
+}
+
+async function careMarkDose(doseId, btn) {
+  if (!doseId) return;
+  if (btn) { btn.textContent = '...'; btn.disabled = true; }
+  try {
+    await api('PATCH', `/doses/${doseId}/take`, {});
+    toast('Dosis marcada como tomada');
+    await loadCareDash();
+  } catch (err) {
+    toast('Error: ' + err.message);
+    if (btn) { btn.textContent = 'Marcar'; btn.disabled = false; }
   }
 }
 
@@ -1124,8 +1193,8 @@ function confirmDeleteMed(id, name) {
       <div style="font-size:13px;font-weight:800;color:var(--red);margin-bottom:10px;">¿Desactivar "${name}"?</div>
       <div style="font-size:12px;color:var(--muted);font-weight:700;margin-bottom:12px;">El medicamento dejará de aparecer en el horario. Podrás reactivarlo desde la base de datos.</div>
       <div style="display:flex;gap:8px;">
-        <button onclick="cancelDelete('${id}')" style="flex:1;padding:10px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;cursor:pointer;color:var(--muted);">Cancelar</button>
-        <button onclick="deleteMedication('${id}')" style="flex:1;padding:10px;background:var(--red);border:none;border-radius:var(--r);font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;cursor:pointer;color:#fff;">Sí, desactivar</button>
+        <button onclick="cancelDelete('${id}')" style="flex:1;padding:10px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:800;cursor:pointer;color:var(--muted);">Cancelar</button>
+        <button onclick="deleteMedication('${id}')" style="flex:1;padding:10px;background:var(--red);border:none;border-radius:var(--r);font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:800;cursor:pointer;color:#fff;">Sí, desactivar</button>
       </div>
     </div>`;
 }
